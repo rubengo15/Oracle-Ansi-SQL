@@ -201,22 +201,127 @@ SELECT COUNT (*) AS empleados, oficio FROM emp WHERE oficio IN ('ANALISTA', 'VEN
 SELECT COUNT (*) AS empleados, oficio FROM emp GROUP BY oficio HAVING COUNT (*) >= 2;
 
 
+--                                              EJERCICIOS
+
+-- EJERCICIO 2
+-- Encontrar el salario más alto, mas bajo y la diferencia entre ambos de todos los empleados con oficio EMPLEADO.
+SELECT oficio, MAX (salario) AS maximo_salario, MIN (salario) AS minimo_salario, MAX (salario) - MIN (salario) AS diferencia_salarios FROM emp GROUP BY oficio HAVING oficio = 'EMPLEADO';
+
+-- EJERCICIO 4
+-- Visualizar el número de personas que realizan cada oficio en cada departamento ordenado por departamento.
+SELECT COUNT (*) AS personas, oficio, dept_no FROM emp GROUP BY dept_no, oficio ORDER BY 3;
+
+-- EJERCICIO 5
+-- Buscar aquellos departamentos con cuatro o más personas trabajando.
+SELECT * FROM emp;
+SELECT COUNT (*) AS personas, dept_no  FROM emp GROUP BY dept_no HAVING COUNT (*) >= 4;
+
+-- EJERCICIO 7
+-- Visualizar el número de enfermeros, enfermeras e interinos que hay en la plantilla, ordenados por la función.
+SELECT funcion, COUNT (*) AS puestos FROM plantilla GROUP BY funcion HAVING funcion IN ('ENFERMERO', 'ENFERMERA', 'INTERINO') ORDER BY funcion;
+
+-- EJERCICIO 8
+-- Visualizar departamentos, oficios y número de personas, para aquellos departamentos que tengan dos o más personas trabajando en el mismo oficio.
+SELECT dept_no, oficio, COUNT (*) AS personas FROM emp GROUP BY oficio, dept_no HAVING COUNT (*) >= 2;
+
+-- EJERCICIO 10
+-- Calcular el valor medio de las camas que existen para cada nombre de sala. Indicar el nombre de cada sala y el número de cada una de ellas.
+SELECT * FROM sala;
+SELECT COUNT (nombre), nombre, AVG (NUM_CAMA) AS media_camas from sala GROUP BY nombre; 
+
+-- EJERCICIO 11
+-- Calcular el salario medio de la plantilla de la sala 6, según la función que realizan. Indicar la función y el número de empleados.
+SELECT * FROM plantilla;
+SELECT COUNT (*) AS empleados, sala_cod, AVG (salario), funcion FROM plantilla GROUP BY sala_cod, funcion HAVING sala_cod = 6;
+
+-- EJERCICIO 13
+-- Mostrar el número de hombres y el número de mujeres que hay entre los enfermos.
+SELECT * FROM enfermo;
+SELECT COUNT (*) AS personas, sexo FROM enfermo GROUP BY sexo;
+
+-- EJERCICIO 15
+-- Calcular el número de salas que existen en cada hospital.
+SELECT * FROM sala;
+SELECT COUNT (*) AS numero_salas, hospital_cod FROM sala GROUP BY hospital_cod;
+
+-- EJERCICIO 16
+-- Mostrar el número de enfermeras que existan por cada sala
+SELECT * FROM plantilla;
+SELECT COUNT (*) AS enfermeras_sal, sala_cod AS enfermeras_sala FROM plantilla WHERE funcion = 'ENFERMERA' GROUP BY sala_cod;
 
 
 
+-- CONSULTAS DE COMBINACION
+-- NOS PERMITEN MOSTRAR DATOS DE VARIAS TABLAS QUE DEBEN ESTAR RELACCIONADAS ENTRE SI MEDIANTE UNA CLAVE
+-- 1) NECESITAMOS EL CAMPO O CAMPOS DE RELACCION ENTRE LAS TABLAS (CAMPO = COLUMNA)
+-- 2) DEBEMOS PONER EL NOMBRE DE CADA TABLA Y CADA CAMPO EN LA CONSULTA
+-- SINTAXIS:
+SELECT TABLA1.CAMPO1, TABLA1.CAMPO2,
+TABLA2.CAMPO1, TABLA2.CAMPO2 
+FROM TABLA1
+INNER JOIN TABLA2
+ON TABLA1.CAMPORELACION = TABLA2.CAMPORELACION;
+
+-- MOSTRAR EL APELLIDO, EL OFICIO DE EMPLEADOS JUNTO A SU NOMBRE DE DEPARTAMENTO Y LOCALIDAD
+SELECT emp.apellido, emp.oficio, dept.dnombre, dept.loc FROM emp INNER JOIN dept ON emp.dept_no = dept.dept_no; --ESTA ESLA EFICIENTE Y CORRECTA
+
+-- TENEMOS OTRA SINTAXIS PARA REALIZAR LOS JOIN
+SELECT emp.apellido, emp.oficio, dept.dnombre, dept.loc FROM emp, dept WHERE emp.dept_no = dept.dept_no; -- YA NO SE USA
+
+-- PODEMOS REALIZAR, POR SUPUESTO NUESTROS WHERE
+-- QUEREMOS MOSTRAR LOS DATOS SOLO DE MADRID
+SELECT emp.apellido, emp.oficio, dept.dnombre, dept.loc FROM emp INNER JOIN dept ON emp.dept_no = dept.dept_no WHERE dept.loc = 'MADRID';
+
+-- NO ES OBLIGATORIO INCLUIR EL NOMBRE DE LA TABLA ANTES DEL CAMPO A MOSTRAR EN EL SELECT, PERO ES PEOR YA QUE LLEVA A PERDIDAS DE INFORMACION
+SELECT emp.apellido, oficio, dept.dnombre, loc FROM emp INNER JOIN dept ON emp.dept_no = dept.dept_no;
+
+-- PODEMOS INCLUIR ALIAS A LOS NOMBRES DE LAS TABLAS PARA LLAMARLAS ASI A LO LARGO DE LA CONSULTA, ES UTIL CUANDO TENEMOS TABLAS CON NOMBRES MUY LARGOS
+-- CUANDO PONEMOS ALIAS, LA TABLA SE LLAMARA ASI PARA TODA LA CONSULTA
+SELECT e.apellido, e.oficio, d.dnombre, d.loc FROM emp e INNER JOIN dept d ON e.dept_no = d.dept_no; -- EN EL FROM E INNER JOIN SE PONEN LOS ALIAS 
+
+-- TENEMOS MULTIPLES TIPOS DE JOIN EN LAS BASES DE DATOS:
+-- INNER: COMBINA LOS RESULTADOS DE LAS DOS TABLAS
+-- LEFT: COMBINA LAS DOS TABLAS Y LA TABLA IZQUIERDA
+-- RIGHT: COMBINA LAS DOS TABLAS Y LA TABLA DERECHA
+-- FULL: COMBINA LAS DOS TABLAS Y FUERZA LAS DOS TABLAS
+-- CROSS: PRODUCTO CARTESIANO, COMBINAR CADA DATO DE UNA TABLA CON LOS OTROS DATOS DE LA OTRA TABLA
+
+SELECT DISTINCT dept_no from emp;
+SELECT * FROM dept;
+SELECT e.apellido, e.oficio, d.dnombre, d.loc FROM emp e INNER JOIN dept d ON e.dept_no = d.dept_no ORDER BY d.loc;
 
 
+-- TENEMOS UN DEPARTAMENO: 40, PRODUCCION, GRANADA SIN EMPLEADOS
+-- VAMOS A CREAR UN NUEVO EMPLEADO QUE NO TENGA DEPARTAMENTO
 
+INSERT INTO emp VALUES('1111', 'sin dept', 'EMPLEADO', 7919, TO_DATE('20-10-1986', 'DD-MM-YYYY'), 258500, 50000, 50);
+SELECT * FROM emp;
 
+-- TENEMOS UN EMPLEADO SIN DEPARTAMENTO EN EL 50
+SELECT emp.apellido, dept.dnombre, dept.loc FROM emp INNER JOIN dept ON emp.dept_no = dept.dept_no;
 
+-- LEFT: COMBINA LAS DOS TABLAS Y LA TABLA IZQUIERDA
+-- LA TABLA DE LA IZQUIERDA ES LA DE ANTES DEL JOIN
+SELECT emp.apellido, dept.dnombre, dept.loc FROM emp LEFT JOIN dept ON emp.dept_no = dept.dept_no;
 
+-- RIGHT: COMBINA LAS DOS TABLAS Y LA TABLA DERECHA
+-- LA TABLA DE LA DERECHA ES LA DE DESPUES DEL JOIN
+SELECT emp.apellido, dept.dnombre, dept.loc FROM emp RIGHT JOIN dept ON emp.dept_no = dept.dept_no;
 
+-- FULL: COMBINA LAS DOS TABLAS Y FUERZA LAS DOS TABLAS
+SELECT emp.apellido, dept.dnombre, dept.loc FROM emp FULL JOIN dept ON emp.dept_no = dept.dept_no;
 
+-- CROSS: PRODUCTO CARTESIANO, COMBINAR CADA DATO DE UNA TABLA CON LOS OTROS DATOS DE LA OTRA TABLA, NO LLEVA ON
+SELECT emp.apellido, dept.dnombre, dept.loc FROM emp CROSS JOIN dept;
 
+-- MOSTRAR LA MEDIA SALARIAL DE LOS DOCTORES POR HOSPITAL
+SELECT AVG (salario) as media, hospital_cod FROM doctor GROUP BY hospital_cod;
+-- MOSTRAR LA MEDIA SALARIAL DE LOS DOCTORES POR HOSPITAL MOSTRANDO EL NOMBRE DEL HOSPITAL
+SELECT AVG (doctor.salario) as media, hospital.nombre FROM doctor INNER JOIN hospital ON doctor.hospital_cod = hospital.hospital_cod GROUP BY hospital.nombre;
 
-
-
-
+-- MOSTRAR EL NUMERO DE EMPLEADOS QUE EXISTEN POR CADA LOCALIDAD
+SELECT COUNT (emp.emp_no) AS cantidad_empleados, dept.loc FROM emp RIGHT JOIN dept ON emp.dept_no = dept.dept_no GROUP BY dept.loc;
+SELECT * FROM emp;
 
 
 
