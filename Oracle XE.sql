@@ -324,6 +324,159 @@ SELECT COUNT (emp.emp_no) AS cantidad_empleados, dept.loc FROM emp RIGHT JOIN de
 SELECT * FROM emp;
 
 
+--                                              EJERCICIOS
+
+-- EJERCICIO 1
+-- Seleccionar el apellido, oficio, salario, numero de departamento y su nombre de todos los empleados cuyo salario sea mayor de 300000
+SELECT * FROM dept;
+SELECT * FROM emp;
+SELECT emp.apellido, emp.oficio, emp.salario, dept.dept_no, dept.dnombre FROM emp INNER JOIN dept ON emp.dept_no = dept.dept_no WHERE emp.salario >= '300000';
+
+-- EJERCICIO 2
+-- Mostrar todos los nombres de Hospital con sus nombres de salas correspondientes.
+SELECT * FROM hospital;
+SELECT * FROM sala;
+SELECT sala.nombre AS sala_hospital, hospital.nombre AS nombre_hospital FROM sala INNER JOIN hospital ON sala.hospital_cod = hospital.hospital_cod;
+
+-- EJERCICIO 3
+-- Calcular cuántos trabajadores de la empresa hay en cada ciudad.
+SELECT * FROM dept;
+SELECT * FROM emp;
+SELECT dept.loc, COUNT (emp.emp_no) AS cantidad_empleados FROM dept LEFT JOIN emp ON emp.dept_no = dept.dept_no GROUP BY dept.loc;
+
+-- EJERCICIO 4
+-- Visualizar cuantas personas realizan cada oficio en cada departamento mostrando el nombre del departamento.
+SELECT * FROM dept;
+SELECT * FROM emp;
+SELECT dept.dnombre, COUNT (emp.emp_no) AS personas , emp.oficio FROM dept LEFT JOIN emp ON emp.dept_no = dept.dept_no GROUP BY emp.oficio, dept.dnombre;
+
+-- EJERCICIO 5
+-- Contar cuantas salas hay en cada hospital, mostrando el nombre de las salas y el nombre del hospital
+SELECT * FROM hospital;
+SELECT * FROM sala;
+SELECT COUNT (sala.sala_cod) AS numero_salas, sala.nombre AS sala_nombre, hospital.nombre AS hospital_nombre FROM sala INNER JOIN hospital ON sala.hospital_cod = hospital.hospital_cod GROUP BY sala.nombre, hospital.nombre;
+
+-- EJERCICIO 6
+-- Queremos saber cuántos trabajadores se dieron de alta entre el año 1997 y 1998 y en qué departamento.
+SELECT * FROM dept;
+SELECT * FROM emp;
+SELECT COUNT (emp.emp_no) AS altas, dept.dnombre FROM dept INNER JOIN emp ON emp.dept_no = dept.dept_no WHERE (emp.fecha_alt >= '01/01/97' AND emp.fecha_alt <= '31/12/98') GROUP BY dept.dnombre;
+SELECT COUNT (emp.emp_no) AS altas, dept.dnombre FROM dept INNER JOIN emp ON emp.dept_no = dept.dept_no WHERE fecha_alt BETWEEN '01/01/97' AND '31/12/98' GROUP BY dept.dnombre; -- manera del profesor
+
+-- EJERCICIO 7
+-- Buscar aquellas ciudades con cuatro o más personas trabajando.
+SELECT * FROM dept;
+SELECT * FROM emp;
+SELECT dept.loc, COUNT (emp.emp_no) AS personas FROM dept INNER JOIN emp ON emp.dept_no = dept.dept_no GROUP BY dept.loc HAVING COUNT (emp.emp_no) >= '4';
+
+-- EJERCICIO 8
+-- Calcular la media salarial por ciudad.Mostrar solamente la media para Madrid y SEVILLA.
+SELECT * FROM dept;
+SELECT * FROM emp;
+SELECT dept.loc, AVG (emp.salario) AS media_salarial FROM dept INNER JOIN emp ON emp.dept_no = dept.dept_no GROUP BY dept.loc  HAVING dept.loc = 'MADRID' OR dept.loc = 'SEVILLA';
+SELECT dept.loc, AVG (emp.salario) AS media_salarial FROM dept INNER JOIN emp ON emp.dept_no = dept.dept_no GROUP BY dept.loc  HAVING dept.loc IN ('MADRID', 'SEVILLA'); -- manera del profesor
+
+-- EJERCICIO 9
+-- Mostrar los doctores junto con el nombre de hospital en el que ejercen, la dirección y el teléfono del mismo.
+SELECT * FROM hospital;
+SELECT * FROM doctor;
+SELECT doctor.apellido, hospital.nombre, hospital.direccion, hospital.telefono FROM doctor INNER JOIN hospital ON hospital.hospital_cod = doctor.hospital_cod;
+
+-- EJERCICIO 10
+-- Mostrar los nombres de los hospitales junto con el mejor salario de los empleados dela plantilla decada hospital.
+SELECT * FROM hospital;
+SELECT * FROM plantilla;
+SELECT hospital.nombre, MAX (plantilla.salario) AS maximo_salario FROM hospital INNER JOIN plantilla ON hospital.hospital_cod = plantilla.hospital_cod GROUP BY hospital.nombre;
+
+-- EJERCICIO 11
+-- Visualizar el Apellido, función y turnode los empleados de la plantilla junto con el nombre de la salayel nombre del hospitalcon el teléfono.
+-- SELECT TABLA1.CAMPO1, TABLA1.CAMPO2, TABLA2.CAMPO1, TABLA2.CAMPO2, TABLA3.CAMPO1, TABLA3.CAMPO2 FROM TABLA1 INNER JOIN TABLA2 ON TABLA1.RELACION = TABLA2.RELACION INNER JOIN TABLA3 ON TABLA1.RELACION = TABLA3.RELACION;
+SELECT * FROM plantilla;
+SELECT * FROM sala;
+SELECT * FROM hospital;
+SELECT plantilla.apellido, plantilla.funcion, plantilla.turno, sala.nombre AS nombre_sala, hospital.nombre AS nombre_hospital, hospital.telefono FROM plantilla INNER JOIN hospital ON plantilla.hospital_cod = hospital.hospital_cod INNER JOIN sala ON hospital.hospital_cod = sala.hospital_cod AND plantilla.sala_cod = sala.sala_cod;
+
+-- EJERCICIO 12
+-- Visualizar el máximo salario, mínimo salario de los Directores dependiendo de la ciudad en la que trabajen. Indicar el número total de directores por ciudad
+SELECT * FROM dept;
+SELECT * FROM emp;
+SELECT COUNT (emp.emp_no) as directores, emp.oficio, dept.loc, MAX (emp.salario) AS maximo_salario, MIN (emp.salario) AS minimo_salario FROM dept INNER JOIN emp ON emp.dept_no = dept.dept_no GROUP BY emp.oficio, dept.loc HAVING oficio = 'DIRECTOR';
+SELECT COUNT (emp.emp_no) as directores, dept.loc, MAX (emp.salario) AS maximo_salario, MIN (emp.salario) AS minimo_salario FROM dept INNER JOIN emp ON emp.dept_no = dept.dept_no WHERE oficio = 'DIRECTOR' GROUP BY dept.loc; --Manera del profesor
+
+-- EJERCICIO 13
+-- Averiguar la combinación de que salas podría haber por cada uno de los hospitales
+SELECT * FROM hospital;
+SELECT * FROM sala;
+SELECT sala.nombre AS nombre_sala, hospital.nombre AS nombre_hospital FROM sala CROSS JOIN hospital;
+
+
+-- SUBCONSULTAS 
+-- SON CONSULTAS QUE NECESITAN DEL RESULTADO DE OTRA CONSULTA PARA PODER SER EJECUTADAS. NO SON AOUTONOMAS, NECESITAN ALGUN VALOR. 
+-- NO IMPORTA EL NIVEL DE ANIDAMIENTO DE SUBCONSULTAS, AUNQUE PUEDEN REALENTIZAR LA RESPUESTA.
+-- GENERAN BLOQUEOS EN CONSULTAS SELECT, LO QUE TAMBIEN REALENTIZAN LAS RESPUESTAS
+-- DEBEMOS INTENTAR EVITARLAS EN LA MEDIDA DE LO POSIBLE CON SELECT
+
+-- QUIERO VISUALIZAR LOS DATOS DEL EMPLEADO QUE MAS COBRA DE LA EMPRESA (EMP)
+SELECT MAX (salario) FROM emp;
+-- 650000
+SELECT * FROM emp WHERE salario = 650000;
+-- SE EJECUTAN LAS DOS CONSULTAS A LA VEZ Y SE ANIDA EL RESULTADO DE UNA CONSULTA CON LA IGUALDAD DE LA RESPUESTA DE OTRA CONSULTA
+-- LAS SUBCONSULTAS VAN ENTRE PARENTESIS
+SELECT * FROM emp WHERE salario = (SELECT MAX (salario) FROM emp);
+
+-- MOSTRAR LOS EMPLEADOS QUE TIENEN EL MISMO OFICIO QUE EL EMPLEADO "GIL"
+SELECT * FROM emp;
+SELECT * FROM emp WHERE oficio = (SELECT oficio FROM emp WHERE apellido = 'gil');
+-- MOSTRAR LOS EMPLEADOS QUE TIENEN EL MISMO OFICIO QUE EL EMPLEADO "GIL" Y QUE COBREN MENOS QUE "JIMENEZ"
+SELECT * FROM emp;
+SELECT * FROM emp WHERE oficio = (SELECT oficio FROM emp WHERE apellido = 'gil') AND salario < (SELECT salario FROM emp WHERE apellido = 'jimenez');
+-- MOSTRAR LOS EMPLEADOS QUE TIENEN EL MISMO OFICIO QUE EL EMPLEADO "GIL" Y EL MISMO OFICIO QUE "JIMENEZ"
+-- SI UNA SUBCONSULTA DEVUELVE MAS DE UN VALOR, SE UTILIZA EL OPERADOR IN
+SELECT * FROM emp;
+SELECT * FROM emp WHERE oficio IN (SELECT oficio FROM emp WHERE apellido = 'gil' OR apellido = 'jimenez');
+
+-- POR SUPUESTO, PODEMOS UTILIZAR SUBCONSULTAS PARA OTRAS TABLAS
+-- EVITARLO SI LAS TABLAS TIENEN ALGUNA RELACION DE CAMPOS
+-- MOSTRAR EL APELLIDO Y EL OFICIO DE LOS EMPLEADOS DEL DEPARTAMENTO DE MADRID
+SELECT apellido, oficio FROM emp WHERE dept_no = (SELECT dept_no FROM dept WHERE LOC = 'MADRID');
+SELECT emp.apellido, emp.oficio FROM emp INNER JOIN dept ON emp.dept_no = dept.dept_no WHERE dept.loc = 'MADRID'; -- ESTA SERIA LA MANERA MAS EFICIENTE DE HACERLO
+
+
+-- CONSULTAS UNION
+-- MUESTRAN, EN UN MISMO CURSOR, UN MISMO CONJUNTO DE RESULTADOS
+-- ESTAS CONSULTAS SE UTILIZAN COMO CONCEPTO, NO COMO RELACION
+-- DEBEMOS DE SEGUIR TRES NORMAS:
+-- 1) LA PRIMERA CONSULTA ES LA JEFA
+-- 2) TODAS LAS CONSULTAS DEBEN TENER EL MISMO NUMERO DE COLUMNAS
+-- 3) TODAS LAS COLUMNAS DEBEN TENER EL MISMO TIPO DE DATO ENTRE SI
+
+-- EN NUESTRA BASE DE DATOS, TENEMOS DATOS DE PERSONAS EN DIFERENTES TABLAS
+-- EMP, PLANTILLA Y DOCTOR
+SELECT apellido, oficio, salario FROM emp UNION SELECT apellido, funcion, salario FROM plantilla UNION SELECT apellido, especialidad, salario  FROM doctor;
+-- POR SUPUESTO PODEMOS ORDENAR SIN PROBLEMA
+SELECT apellido, oficio, salario FROM emp UNION SELECT apellido, funcion, salario FROM plantilla UNION SELECT apellido, especialidad, salario  FROM doctor ORDER BY salario;
+-- EN LOS UNION ES MEJOR ORDENAR POR NUMERANDO "ORDER BY 3" POR EJEMPLO EN ESTE CASO. YA QUE SI PONEMOS UN ALIAS NO FUNCIONARIA, SOLO CON NUMERANDO.
+SELECT apellido, oficio, salario FROM emp UNION SELECT apellido, funcion, salario FROM plantilla UNION SELECT apellido, especialidad, salario  FROM doctor ORDER BY 3;
+-- SI NO SE LLAMAN IGUAL LAS COLUMNAS EL ORDER BY CON NOMBRE NO FUNCIONARA, POR ESO USAR SIEMPRE NUMERANDO
+-- POR SUPUESTO PODEMOS FILTRAR LOS DATOS DE LA CONSULTA.
+-- MOSTRAR LOS DATOS DE LAS PERSONAS QUE COBREN MENOS DE 300000
+SELECT apellido, oficio, salario FROM emp WHERE salario < 300000 UNION SELECT apellido, funcion, salario FROM plantilla WHERE salario < 300000 UNION SELECT apellido, especialidad, salario FROM doctor WHERE salario < 300000 ORDER BY 1;
+-- CADA FILTRO ES AFECTADO A CADA UNA DE LAS COLUMNAS
+-- CADA WHERE ES INDEPENDIENTE, SE HACEN EN CADA SELECT
+
+-- UNION ELIMINA LOS RESULTADOS REPETIDOS
+SELECT apellido, oficio FROM emp UNION SELECT apellido, oficio FROM emp;
+-- SI QUEREMOS RESULTADOS REPETIDOS DEBEMOS USAR UNION ALL
+SELECT apellido, oficio FROM emp UNION ALL SELECT apellido, oficio FROM emp;
+
+
+
+
+
+
+
+
+
 
 
 
