@@ -469,14 +469,208 @@ SELECT apellido, oficio FROM emp UNION SELECT apellido, oficio FROM emp;
 -- SI QUEREMOS RESULTADOS REPETIDOS DEBEMOS USAR UNION ALL
 SELECT apellido, oficio FROM emp UNION ALL SELECT apellido, oficio FROM emp;
 
+-- SELECT TO SELECT
+-- ES UNA CONSULTA SOBRE UN CURSOR (SELECT)
+-- CUANDO HACEMOS UN SELECT EN REALIDAD ESTAMOS RECUPERANDO DATOS DE UNA TABLA
+-- ESTE TIPO DE CONSULTAS NOS PERMITEN RECUPERAR DATOS DE UN SELECT YA REALIZADO.
+-- LOS WHERE Y DE MAS SE HACEN SOBRE EL CURSOR.
+-- SITAXIS:
+SELECT * FROM (SELECT TABLA1.CAMPO1 AS ALIAS, TABLA1.CAMPO2 FROM TABLA1 UNION TABLA2.CAMPO1, TABLA2.CAMPO2 FROM TABLA2) CONSULTA WHERE CONSULTA.ALIAS = 'VALOR';
+
+-- QUEREMOS MOSTRAR LOS DATOS DE TODAS LAS PERSONAS DE MI BBDD (EMP, DOCTOR, PLANTILLA)
+-- SOLAMENTE QUEREMOS LOS QUE COBREN MENOS DE 300000
+SELECT * FROM (SELECT apellido, oficio, salario AS sueldo FROM emp UNION SELECT apellido, funcion, salario FROM plantilla UNION SELECT apellido, especialidad, salario FROM doctor) datos WHERE datos.sueldo < 300000  ORDER BY 1;
+
+-- CONSULTAS A NIVEL DE FILA
+-- SON CONSULTAS CREADAS PARA DAR FORMA A LA SALIDA DE DATOS
+-- NO MODIFICAN LOS DATOS DE LA TABLA, LOS MUESTRAN DE OTRA FORMA SEGUN YO LOS NECESITE. VAN CON PREGUNTAS EN LAS CONSULTAS.
+-- 1) SINTAXIS EALUANDO UN CAMPO DE IGUALDAD:
+SELECT CAMPO1, CAMPO2, CASE CAMPO3 WHEN 'DATO1' THEN 'VALOR1' WHEN 'DATO2' THEN 'VALOR2' ELSE 'VALOR3' END AS ALIAS FROM TABLA; 
+
+SELECT * FROM plantilla;
+-- MOSTRAMOS LOS DATOS DE LA PLANTILLA PERO CON SU TURNO QUE SE VEA BIEN
+SELECT apellido, funcion, CASE turno WHEN 'T' THEN 'TARDE' WHEN 'M' THEN 'MAÑANA' WHEN 'N' THEN 'NOCHE' END AS turno_alargado FROM plantilla;
+
+-- 2) EVALUAR POR UN OPERADOR (RANGO, MAYOR O MENOR, DISTINTO)
+SELECT campo1, campo2, CASE WHEN campo3 <= 800 THEN 'resultado' WHEN campo3 > 800 THEN 'resultado2' ELSE 'resultado3'  END AS formato FROM tabla;
+
+-- MOSTRAR SALARIOS DE LA PLANTILLA
+SELECT * FROM plantilla;
+SELECT apellido, funcion, salario, CASE WHEN salario >= 250000 THEN 'salario correcto' WHEN salario >= 170000 AND salario < 250000 THEN 'salario medio' ELSE 'becario' END AS rango_salarial FROM plantilla;
+
+SELECT apellido, funcion, salario,
+    CASE WHEN salario >= 250000 THEN 'salario correcto'
+    WHEN salario >= 170000 AND salario < 250000 THEN 'salario medio'
+    ELSE 'becario'
+END AS rango_salarial
+FROM plantilla;
+
+
+--                                              EJERCICIOS
+
+-- EJERCICIO 1
+-- MOSTRAR LA SUMA SALARIAL DE LOS EMPLEADOS POR SU NOMBRE DE DEPARTAMENTO
+SELECT dept.dnombre AS departamento, SUM (emp.salario) AS suma_salarial FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no GROUP BY dept.dnombre;
+
+-- EJERCICIO 2
+-- MOSTRAR LA SUMA SALARIAL DE LOS DOCTORES POR SU HOSPITAL
+SELECT hospital.nombre AS hospital, SUM (doctor.salario) AS suma_salarial FROM hospital INNER JOIN doctor ON hospital.hospital_cod = doctor.hospital_cod GROUP BY hospital.nombre;
+
+-- EJERCICIO 3
+-- ME GUSTARIA PODER VER TODO JUNTO EN UNA MISMA CONSULTA
+SELECT dept.dnombre AS departamento_u_hospital, SUM (emp.salario) AS suma_salarial FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no GROUP BY dept.dnombre UNION SELECT hospital.nombre AS hospital, SUM (doctor.salario) AS suma_salarial FROM hospital INNER JOIN doctor ON hospital.hospital_cod = doctor.hospital_cod GROUP BY hospital.nombre;
 
 
 
+-- CONSULAS DE ACCION
+-- SON CONSULTAS PARA MODIFICAR LOS REGISTROS DE LA BBDD
+-- EN ORACLE, LAS CONSULAS DE ACCION SON TRANSACCIONALES, ES DECIR, SE ALMACENAN DE FORMA TEMPORAL POR SESION.
+-- PARA DESHACER LOS CAMBIOS O HACERLOS PERMANENTES TENEMOS DOS PALABRAS:
+-- COMMIT: HACE LOS CAMBIOS PERMANENTES
+-- ROLLBACK: DESHACE LOS CAMBIOS REALIZADOS
+
+-- EJEMPLO:
+-- 1) INSERTO 2 REGISTROS NUEVOS
+-- 2) COMMIT: REGISTRA DE FORMA PERMANENTE EL PUNTO 1
+-- 3) INSERTO OTRO REGISTRO NUEVO
+-- 4) ROLLBACK: SOLMENTE QUITA EL PUNTO 3
+
+-- TENEMOS 3 TIPOS DE CONSULTAS DE ACCIONES
+-- INSERT: INSERTA UN NUEVO REGISTRO EN UNA LA TABLA
+-- UPDATE: MODIFICA UNO O MAS REGISTROS DE UNA TABLA
+-- DELETE: ELIMINA UNO O MAS REGISTROS DE UNA TABLA
+-----------------------
 
 
+-- INSERT 
+-- CADA REGISTRO A INSERTAR ES UNA INSTRUCCION INSERT, SI QUEREMOS INSERTAR 5 REGISTROS SON 5 INSERT
+-- TENEMOS DOS TIPOS DE SINTAXIS:
+-- 1) INSERTAR TODOS LOS DATOS DE LA TABLA: DEBEMOS INDICAR TODAS LAS COLUMNAS/CAMPOS DE LA TABLA Y EN EL MISMO ORDEN QUE ESTEN EN LA PROPIA TABLA.
+-- INSERT INTO tabla VALUES (valor1, valor2, valor3, valor4);
+-- EJEMPLOS:
+
+INSERT INTO dept VALUES (50, 'ORACLE', 'BERNABEU');
+SELECT * FROM dept;
+ROLLBACK;
+
+INSERT INTO dept VALUES (50, 'ORACLE', 'BERNABEU');
+COMMIT;
+INSERT INTO dept VALUES (51, 'BORRAR', 'BORRAR');
+ROLLBACK;
+SELECT * FROM dept;
+
+-- 2) INSERTAR SOLAMENTE ALGUNOS DATOS DE LA TABLA: DEBEMOS INDICAR EL NOMBRE DE LAS COLUMNAS QUE DESEAMOS INSERTAR Y LOS VALORES IRAN EN DICHO ORDEN, LA TABLA NO TIENE NADA QUE VER.
+-- INSERT INTO tabla (campo3, campo7) VALUES (valor3, valor7);
+-- EJEMPLOS:
+SELECT * FROM dept;
+INSERT INTO dept (dept_no, loc) VALUES (55, 'ALMERIA');
+
+-- LAS SUBCONSULTAS SON SUPER UTILES SI ESTAMOS EN CONSULTAS DE ACCION
+-- NECESITO UN DEPARTAMENTO DE SIDRA EN GIJON.
+-- GENERAR EL SIGUIENTE NUMERO DISPONIBLE EN LA CONSULTA DE ACCION
+SELECT * FROM dept;
+SELECT MAX (dept_no) + 1 FROM dept;
+INSERT INTO dept VALUES ((SELECT MAX (dept_no) + 1 FROM dept), 'SIDRA', 'GIJON');
+INSERT INTO dept VALUES (56, 'SIDRA', 'GIJON');
+ROLLBACK;
 
 
+-- DELETE
+-- ELIMINA UNA O MAS FILAS DE UNA TABLA, SI NO EXISTE NADA PARA ELIMINAR NO HACE NADA
+-- DELETE FROM tabla;
+-- LA SINTAXIS ANTERIOR ELIMINA TODOS LOS REGISTROS DE LA TABLA
+-- OPCIONAL, INCLUIR WHERE
+-- ELIMINAR EL DEARTAMENTO DE ORACLE:
+SELECT * FROM dept;
+DELETE FROM dept WHERE dnombre = 'ORACLE';
+SELECT * FROM dept;
+ROLLBACK;
 
+-- MUY UTIL UTILIZAR SUBCONSULTAS PARA DELETE
+-- ELIMINAR TODOS LOS EMPLEADOS DE GRANADA
+DELETE FROM emp WHERE dept_no = (SELECT dept_no FROM dept WHERE loc = 'GRANADA');
+SELECT * FROM dept;
+SELECT * FROM emp;
+ROLLBACK;
+
+
+-- UPDATE
+-- MODIFICA UNA O VARIAS FILAS DE UNA TABLA, PUEDE MODIFICAR VARIAS COLUMNAS A LA VEZ
+-- UPDATE tabla SET campo1 = valor1, campo2 = valor2;
+-- ESTA CONSULTA MODIFICA TODAS LAS FILAS DE LA TABLA, ES CONVENIENTE USAR UN WHERE
+-- MODIFICAR EL SALARIO DE LA PLANTILLA DEL TURNO DE NOCHE, TODOS GANARAN 315000
+SELECT * FROM plantilla;
+UPDATE plantilla SET salario = 315000 WHERE turno = 'N';
+
+-- MODIFICAR LA CIUDAD Y EL NOMBRE DEL DEPARTAMENTO 10. SE LLAMARA CUENTAS Y NOS VAMOS A TOLEDO
+UPDATE dept SET loc = 'TOLEDO', dnombre = 'CUENTAS' WHERE dept_no = 10;
+SELECT * FROM dept;
+ROLLBACK;
+
+-- PODEMOS MANTENER EL VALOR DE UNA COLUMNA Y ASIGNAR "ALGO" CON OPERACIONES MATEMATICAS
+-- INCREMENTAR EN 1 EL SALARIO DE TODOS LOS EMPLEADOS
+SELECT * FROM emp;
+UPDATE emp SET salario = salario + 1;
+
+-- PODEMOS UTILIZAR SUBCONSULTAS EN UPDATE
+-- 1) SI LAS SUBCONSULTAS ESTAN EN EL SET, SOLAMENTE DEBEN DEVOLVER UN DATO
+SELECT * FROM emp;
+-- ARROYO ESTA ENVIDIOSO DE SALA, PONER EL MISMO SALARIO A ARROYO QUE SALA
+UPDATE emp SET salario = (SELECT salario FROM emp WHERE apellido = 'sala') WHERE apellido = 'arroyo';
+
+-- LOS CATALANES ESTAN SUBIDOS Y LES BAJAMOS EL SUELDO A LA MITAD.
+-- PONER A LA MITAD EL SUELDO DE LOS EMPELADOS DE BARCELONA
+SELECT * FROM emp;
+SELECT * FROM DEPT;
+UPDATE emp SET salario = salario / 2 WHERE dept_no = (SELECT dept_no FROM dept WHERE loc = 'BARCELONA');
+ROLLBACK;
+
+--                                              EJERCICIOS
+
+-- EJERCICIO 1
+-- Dar de alta con fecha actual al empleado José Escriche Barrera como programador perteneciente al departamento de producción.  Tendrá un salario base de 70000 pts/mes y no cobrará comisión.
+SELECT * FROM emp;
+INSERT INTO emp (emp_no, apellido, oficio, fecha_alt, salario, comision, dept_no) VALUES (( SELECT MAX (emp_no) + 1 FROM emp), 'escriche', 'PROGRAMADOR', '31/03/25', 70000, 0, 40); 
+
+-- EJERCICIO 2
+-- Se quiere dar de alta un departamento de informática situado en Fuenlabrada (Madrid).
+SELECT * FROM DEPT;
+INSERT INTO dept VALUES (60, 'INFORMATICA', 'FUENLABRADA');
+
+-- EJERCICIO 3
+-- El departamento de ventas, por motivos peseteros, se traslada a Teruel, realizar dicha modificación.
+SELECT * FROM DEPT;
+UPDATE dept SET loc = 'TERUEL' WHERE loc = 'BARCELONA';
+
+-- EJERCICIO 4
+--En el departamento anterior (ventas), se dan de alta dos empleados: Julián Romeral y Luis Alonso.  Su salario base es el menor que cobre un empleado, y cobrarán una comisión del 15% de dicho salario.
+SELECT * FROM emp;
+INSERT INTO emp (emp_no, apellido, oficio, salario, comision, dept_no)
+VALUES (
+(SELECT MAX (emp_no) + 1 FROM emp),
+'romeral', 'EMPLEADO', 
+(SELECT MIN (salario) FROM emp),
+(SELECT (salario) * 0.15 FROM emp),
+30); 
+
+-- EJERCICIO 5
+-- Modificar la comisión de los empleados de la empresa, de forma que todos tengan un incremento del 10% del salario.
+SELECT * FROM emp;
+UPDATE emp SET comision = salario * 0.1;
+
+-- EJERCICIO 6
+-- Incrementar un 5% el salario de los interinos de la plantilla que trabajen en el turno de noche.
+SELECT * FROM plantilla;
+UPDATE plantilla SET salario = salario + (salario * 0.05) WHERE funcion = 'INTERINO' AND turno = 'N';
+ROLLBACK;
+
+-- EJERCICIO 7
+-- Incrementar en 5000 Pts. el salario de los empleados del departamento de ventas y del presidente, tomando en cuenta los que se dieron de alta antes que el presidente de la empresa.
+SELECT * FROM emp;
+SELECT * FROM dept;
+UPDATE emp SET salario =  salario + 5000 WHERE dept_no = (SELECT dept_no FROM dept WHERE dnombre = 'VENTAS') OR oficio = 'PRESIDENTE' AND fecha_alt >= '17/11/95';
+
+-- EJERCICIO 8
 
 
 
