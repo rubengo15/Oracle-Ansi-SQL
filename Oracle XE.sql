@@ -630,7 +630,8 @@ ROLLBACK;
 -- EJERCICIO 1
 -- Dar de alta con fecha actual al empleado José Escriche Barrera como programador perteneciente al departamento de producción.  Tendrá un salario base de 70000 pts/mes y no cobrará comisión.
 SELECT * FROM emp;
-INSERT INTO emp (emp_no, apellido, oficio, fecha_alt, salario, comision, dept_no) VALUES (( SELECT MAX (emp_no) + 1 FROM emp), 'escriche', 'PROGRAMADOR', '31/03/25', 70000, 0, 40); 
+INSERT INTO emp (emp_no, apellido, oficio, fecha_alt, salario, comision, dept_no) VALUES (( SELECT MAX (emp_no) + 1 FROM emp), 'escriche', 'PROGRAMADOR', '31/03/25', 70000, 0, (SELECT DEPT_NO FROM DEPT WHERE DNOMBRE='PRODUCCIÓN')); 
+
 
 -- EJERCICIO 2
 -- Se quiere dar de alta un departamento de informática situado en Fuenlabrada (Madrid).
@@ -645,13 +646,17 @@ UPDATE dept SET loc = 'TERUEL' WHERE loc = 'BARCELONA';
 -- EJERCICIO 4
 --En el departamento anterior (ventas), se dan de alta dos empleados: Julián Romeral y Luis Alonso.  Su salario base es el menor que cobre un empleado, y cobrarán una comisión del 15% de dicho salario.
 SELECT * FROM emp;
-INSERT INTO emp (emp_no, apellido, oficio, salario, comision, dept_no)
+
+INSERT INTO emp (emp_no, oficio, apellido, salario, comision, dept_no)
 VALUES (
 (SELECT MAX (emp_no) + 1 FROM emp),
-'romeral', 'EMPLEADO', 
-(SELECT MIN (salario) FROM emp),
-(SELECT (salario) * 0.15 FROM emp),
+'EMPLEADO',
+'romeral', 
+(SELECT MIN (salario) FROM emp WHERE oficio = 'EMPLEADO'),
+(SELECT MIN (salario) * 0.15 FROM emp WHERE oficio = 'EMPLEADO'),
 30); 
+
+ROLLBACK;
 
 -- EJERCICIO 5
 -- Modificar la comisión de los empleados de la empresa, de forma que todos tengan un incremento del 10% del salario.
@@ -668,9 +673,120 @@ ROLLBACK;
 -- Incrementar en 5000 Pts. el salario de los empleados del departamento de ventas y del presidente, tomando en cuenta los que se dieron de alta antes que el presidente de la empresa.
 SELECT * FROM emp;
 SELECT * FROM dept;
-UPDATE emp SET salario =  salario + 5000 WHERE dept_no = (SELECT dept_no FROM dept WHERE dnombre = 'VENTAS') OR oficio = 'PRESIDENTE' AND fecha_alt >= '17/11/95';
+UPDATE emp SET salario =  salario + 5000 WHERE fecha_alt <= '17/11/95' AND  dept_no = (SELECT dept_no FROM dept WHERE dnombre = 'VENTAS') OR oficio = 'PRESIDENTE';
 
 -- EJERCICIO 8
+-- El empleado Sanchez ha pasado por la derecha a un compañero.  Debe cobrar de comisión 12.000 ptas más que el empleado Arroyo y su sueldo se ha incrementado un 10% respecto a su compañero.
+SELECT * FROM emp;
+UPDATE emp SET comision = (SELECT comision + 12000 FROM emp WHERE apellido = 'arroyo'), salario = (SELECT salario * 1,10 FROM emp WHERE apellido = 'arroyo') WHERE apellido = 'sanchez';
+
+-- EJERCICIO 9
+-- Se tienen que desplazar cien camas del Hospital SAN CARLOS para un Hospital de Venezuela.  Actualizar el número de camas del Hospital SAN CARLOS.
+SELECT * FROM hospital;
+UPDATE hospital SET num_cama = num_cama - 100 WHERE nombre = 'san carlos';
+
+-- EJERCICIO 10
+-- Subir el salario y la comisión en 100000 pesetas y veinticinco mil pesetas respectivamente a los empleados que se dieron de alta en este año.
+SELECT * FROM emp;
+UPDATE emp SET salario = salario + 100000, comision = comision + 25000 WHERE fecha_alt >= '01/01/2025';
+
+-- EJERCICIO 11
+-- Ha llegado un nuevo doctor a la Paz.  Su apellido es House y su especialidad es Diagnostico.   Introducir el siguiente número de doctor disponible.
+SELECT * FROM doctor;
+INSERT INTO doctor (doctor_no, apellido, especialidad) VALUES ((SELECT MAX (doctor_no) + 1 FROM doctor), 'House','Diagnostico');
+
+
+
+
+-- INSERT ANSI SQL (MENOS RAPIDO)
+INSERT INTO dept VALUES ((SELECT MAX (dept_no) + 1 FROM dept), 'into', 'into');
+INSERT INTO dept VALUES ((SELECT MAX (dept_no) + 1 FROM dept), 'into2', 'into2');
+INSERT INTO dept VALUES ((SELECT MAX (dept_no) + 1 FROM dept), 'into3', 'into3');
+
+SELECT * FROM dept;
+SELECT * FROM DUAL;
+
+-- INSERT ALL (MAS RAPIDO)
+INSERT ALL 
+    INTO dept VALUES ((SELECT MAX (dept_no) + 1 FROM dept), 'all', 'all')
+    INTO dept VALUES ((SELECT MAX (dept_no) + 1 FROM dept), 'all2', 'all2')
+    INTO dept VALUES ((SELECT MAX (dept_no) + 1 FROM dept), 'all3', 'all3')
+SELECT * FROM dual;
+
+-- EN LOS INSERT ALL NO PUEDES AÑADIR UN INCREMENTAR COMO EN EL EJEMPLO ANTERIOR YA QUE TE ASIGNA EL MISMO NUMERO A TODAS LAS FILAS
+
+-- CREAR TABLAS CON CREATE, UTIL PARA HACER COPIAS DE TABLAS
+
+CREATE TABLE departamentos AS SELECT * FROM dept;
+DESCRIBE dept;
+
+SELECT * FROM departamentos;
+DESCRIBE departamentos;
+
+CREATE TABLE doctoreshospital AS SELECT doctor.doctor_no as iddoctor, doctor.apellido, hospital.nombre, hospital.telefono FROM doctor INNER JOIN hospital ON doctor.hospital_cod = hospital.hospital_cod;
+SELECT * FROM DOCTORESHOSPITAL;
+
+-- INSERT INTO SELECT
+-- ESTA INSTRUCCION NOS PERMIE COPIAR DATOS DE UNA TABLA ORIGEN A UNA TABLA DESTINO.
+-- LA DIFERENCIA CON CREATE SELECT ESTA EN QUE LA TABLA DEBE DE EXISTIR, SIN TABLA DE DESINO NO PODEMOS EJECUTAR ESTA INSRUCCION
+-- LA TABLA DE DESTINO TIENE QUE TENER LA MISMA ESTRUCTURA DE LA TABLA DE ORIGEN
+-- SINTAXIS
+
+INSERT INTO destino SELECT * FROM origen;
+
+-- EJEMPLO
+-- VAMOS A COPIAR LOS DATOS DE LA TABLA DEPT DENTRO DE LA TABLA DEPARTAMENTOS
+INSERT INTO departamentos SELECT * FROM dept;
+SELECT * FROM departamentos;
+
+
+-- VARIABLES DE SUSTITUCON
+
+SELECT apellido, oficio, salario, comision FROM emp WHERE emp_no = '&numero';
+SELECT apellido, &&dato, salario, comision FROM emp WHERE &dato = '&dato2';
+SELECT * FROM emp;
+-- LA VARIABLE &DATO AL EJECUTARLA Y ASIGNARLE 'OFICIO' YA QUEDA FIJA COMO 'OFICIO', SI QUEREMOS USAR OTRA VARIABLE DEBEREMOS DE DARLE OTRA QUE NOS INVENTEMOS QUE ESTE LIBRE
+
+-- NATURAL JOIN
+-- MUESTRA TODOS LOS DATOS DE LAS DOS COLUMNAS O LOS DATOS QUE INDIQUEMOS SIN TENER QUE USAR EL INNER JOIN - ON.
+SELECT apellido, oficio, dnombre, loc, dept_no, apellido FROM emp NATURAL JOIN dept;
+SELECT * FROM emp NATURAL JOIN dept, enfermo;
+
+-- USING
+SELECT apellido, oficio, dnombre FROM emp INNER JOIN dept USING (dept_no);
+
+
+-- NECESITO SABER LOS EMPLEADOS QUE TRABAJAN PARA negro (7698)
+SELECT * FROM emp WHERE dir = 7698;
+
+-- TENEMOS UN PRESIDENTE QUE ES EL JEFE DE LA EMPRESA: REY (7839)
+-- MOSTRAR TODOS LOS EMPLEADOS QUE TRABAJAN PARA REY
+SELECT * FROM emp WHERE dir = 7839;
+
+SELECT LEVEL, DIR , EMP_NO, APELLIDO FROM EMP CONNECT BY EMP_NO = PRIOR DIR START WITH APELLIDO = 'jimenez';
+
+SELECT LEVEL, DIR , EMP_NO, APELLIDO FROM EMP  CONNECT BY PRIOR EMP_NO = DIR START WITH APELLIDO='jimenez';
+
+-- MOSTRAR LOS EMPLEADOS SUBORDINADOS A PARTIR DEL DIRECTOR jimenez
+
+SELECT LEVEL AS nivel, dir, oficio, apellido FROM emp CONNECT BY PRIOR EMP_NO = DIR START WITH APELLIDO='jimenez' ORDER BY 1;
+
+-- ARROYO HA METIDO LA MATA, QUIERO VER A TODOS SUS JEFES EN MI DESPACHO, MANDA EL LISTADO, SOY REY
+
+SELECT LEVEL AS nivel, apellido, oficio FROM emp CONNECT BY emp_no = PRIOR dir START WITH apellido = 'arroyo';
+
+-- SYS_CONNECT_BY_PATH (apellido,' ') AS relacion, PARA AÑADIR GRAFICAMENTE EL RESULTADO CON SEPARADORES EN UNA COLUMNA
+
+SELECT LEVEL AS nivel, apellido, oficio, SYS_CONNECT_BY_PATH (apellido,' ') AS relacion FROM emp CONNECT BY emp_no = PRIOR dir START WITH apellido = 'arroyo';
+
+
+-- INTERSECT (COGE LOS DATOS DE DOS TABLAS O UNA MISMA TABLA, UTIL PARA VER DATOS QUE SE HAN PODIDO MODIFICAR)
+
+SELECT * FROM PLANTILLA WHERE TURNO='T' INTERSECT SELECT* FROM PLANTILLA WHERE FUNCION='ENFERMERA';
+
+-- MINUS (MUESTRA LOS REGISTROS DEL PRIMER SELECT DE UNA TABLA QUITANDO LOS DATOS DEL RESULTADO DEL SEGUNDO SELECT)
+
+SELECT * FROM PLANTILLA WHERE TURNO='T'MINUS SELECT * FROM PLANTILLA WHERE FUNCION='ENFERMERA';
 
 
 
