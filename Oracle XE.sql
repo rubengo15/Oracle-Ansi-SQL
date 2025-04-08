@@ -1098,5 +1098,191 @@ INSERT INTO COLEGIOS VALUES (seq_colegios.nextval, 'COLEGIO2', 'ARENAS DEL SOL',
 INSERT INTO COLEGIOS VALUES (seq_colegios.nextval, 'COLEGIO1', 'LLOBREGAT', 'CATALUÑA', '01/01/1992', 3000000, 3, '3');
 
 SELECT * FROM PROFESORES;
-INSERT INTO COLEGIOS VALUES ('1', 'JUAN', '', '', '00000000D', 'MADRID', 'MADRID', 1000, 1, '', '','');
+INSERT INTO PROFESORES (COD_PROFE, NOMBRE, DNI, LOCALIDAD, PROVINCIA, SALARIO, COD_COLEGIO) VALUES ('1', 'JUAN','00000000D', 'MADRID', 'MADRID', '1000', 1);
+INSERT INTO PROFESORES (COD_PROFE, NOMBRE, DNI, LOCALIDAD, PROVINCIA, SALARIO, COD_COLEGIO) VALUES ('2', 'ALBERTO' , '00000000E' , 'ARENAS DEL SOL', 'VALENCIA', '2000', 3);
+INSERT INTO PROFESORES (COD_PROFE, NOMBRE, DNI, LOCALIDAD, PROVINCIA, SALARIO, COD_COLEGIO) VALUES ('3', 'ANA','00000000F', 'LLOBREGAT', 'CATALUÑA' , '23000', 4);
+
+DELETE FORM REGIONES;
+
+
+-----------------------------------------------------------------------------------------------
+-------------- DICCIONARIO DE DATOS -------------------------------
+
+
+/* EL DICCIONARIO DE DATOS ESTA COMPUESTO DE 3 PREFIJOS
+USER_  -LOS OBJETOS DEL ESQUEMA (= USUARIO)
+ALL_   -LOS OBJETOS DEL ESQUEMA/USUARIO Y DE OTROS ESQUEMAS EN LOS QUE EL USUARIO TIENE ALGUN PRIVILEGIO
+DBA_   -TODOS LOS OBJETOS DE LA INSTANCIA (SOLO VISIBLE POR LOS DBAs)
+*/
+
+SELECT * FROM user_tables;
+SELECT * FROM all_tables;
+SELECT * FROM dba_tables;
+
+/*   -- MULTITENANT
+CDB_   -TODOS LOS OBJETOS DE TODOS LOS CONTENEDORES SI LA SESION ESTA EN EL CONTENEDOR: cdb$root
+       -TODOS LOS OBJETOS DEL CONTENEDOR EN EL QUE SE ENCUENTRA LA SESION, SI ES UN PDB (PLUGGABLE DATABASE)
+DBA_   -TODOS LOS OBJETOS DEL CONTENEDOR EN EL QUE SE ENCUENTRA LA SESION
+
+CONTENEDOR 1 > cdb$root
+CONTENEDOR 2 > pdb$root
+CONTENEDOR 3 > PDBs
+*/
+
+SHOW CON_ID;
+SHOW pdbs; 
+
+SELECT * FROM dictionary;
+SELECT * FROM dict;
+
+--EJEMPLO PARA BUSCAR EN DICCIONARIO
+SELECT * FROM dict WHERE table_name LIKE '%IND%';
+
+/* TABLAS PRNCIPALES PARA CONSULTA/DESARROLLO
+*_OBJECTS        -TODOS LOS OBJETOS 
+*_TABLES         -LAS TABLAS
+*_TAB_COLUMNS    -COLUMNAS DE LAS TABLAS
+*_CONSTRAINTS    -RESTRICCIONES
+*_CONS_COLUMNS   -RESTRICCIONES POR COLUMNA
+*_VIEWS          -VISTAS
+*_INDEXES        -INDICES
+*_IND_COLUMNS    -COLUMNAS DE LOS INDICES
+*_SYNONYMS       -SINONIMOS
+*_SEQUENCES      -SECUENCIAS
+*_TAB_COMMENTS   -COMENTARIOS DE TABLAS
+*_COL_COMMENTS   -COMENTARIOS DE COLUMNAS
+*/
+
+SELECT * FROM dict;
+SELECT * FROM user_objects;
+SELECT * FROM user_tables;
+SELECT * FROM user_tab_columns;
+-- ES COMO UN DESCRIBE PERO MEJOR
+SELECT * FROM user_tab_columns WHERE table_name = 'PROFESORES';
+
+SELECT * FROM user_constraints;
+SELECT * FROM user_constraints WHERE table_name = 'PROFESORES';
+SELECT * FROM user_cons_columns;
+SELECT * FROM user_cons_columns WHERE table_name = 'PROFESORES';
+
+SELECT * FROM user_views;
+
+-- V$
+-- SON VISTAS QUE DAN INFORMACION DEL RENDIMIENTO 
+
+SELECT * FROM v$session;
+SELECT * FROM v$instance;
+SELECT * FROM v$database;
+
+-- COMENTARIOS
+
+create table t1 (c1 number(3));
+comment on table t1 is 'Es una tabla de prueba';
+comment on column t1.c1 is 'Es la columna c1 de la tabla de prueba';
+
+select * from user_tab_comments where table_name='T1';
+select * from user_col_comments where table_name='T1';
+
+-- EJERCICIOS
+-- 1) Consulta la vista del diccionario de datos USER_TABLES para ver información sobre las tablas que posees.
+SELECT table_name FROM user_tables;
+
+-- 2) Consulta la vista del diccionario de datos ALL_TABLES para ver información sobre todas las tablas a las que puedes acceder. Excluye las tablas que te pertenecen.
+SELECT table_name, owner FROM all_tables WHERE owner <> 'SYSTEM';
+
+-- 3) Para una tabla específica, cree un script que informe los nombres de las columnas, los tipos de datos y su longitud, e indique si se permiten valores nulos. Solicite al usuario que introduzca el nombre de la tabla. Asigne los alias adecuados a las columnas DATA_PRECISION y DATA_SCALE. Guarde este script en un archivo llamado lab_12_03.sql. Por ejemplo, si el usuario ingresa DEPARTAMENTOS, se obtiene el siguiente resultado
+SELECT * FROM user_tab_columns;
+SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION PRECISION, DATA_SCALE ESCALA, NULLABLE FROM user_tab_columns WHERE table_name = UPPER ('&tab_name');
+
+-- 4) Cree un script que informe el nombre de la columna, el nombre de la restricción, el tipo de restricción, la condición de búsqueda y el estado de una tabla específica. Debe unir las tablas USER_CONSTRAINTS y ​​USER_CONS_COLUMNS para obtener toda esta información. Solicite al usuario que introduzca el nombre de la tabla. Guarde el script en un archivo llamado lab_12_04.sql.
+SELECT * FROM user_constraints;
+SELECT * FROM user_cons_columns;
+SELECT ucc.column_name, uc.constraint_name, uc.constraint_type, uc.search_condition, uc.status FROM user_constraints uc JOIN user_cons_columns ucc ON uc.table_name = ucc.table_name AND uc.constraint_name = ucc.constraint_name AND uc.table_name = UPPER ('&tab_name'); 
+
+-- 5) Agregue un comentario a la tabla DEPARTAMENTOS. Luego, consulte la vista USER_TAB_COMMENTS para verificar que el comentario esté presente.
+COMMENT ON TABLE dept IS 'HOLA DEPARTAMENTOS';
+SELECT * FROM user_tab_comments WHERE table_name = 'DEPT';
+
+-- 6) Ejecute el script lab_12_06_tab.sql como requisito previo para los ejercicios 6 a 9. Alternativamente, abra el archivo del script para copiar el código y pegarlo en su hoja de cálculo SQL. Luego, ejecute el script. Este script:
+-- Borra las tablas DEPT2 y EMP2
+-- Crea las tablas DEPT2 y EMP2
+
+
+------------------------------ SCRIPT lab_12_06_tab.sql -----------------------------------------------
+--drops tables so that they cannot be restored
+DROP TABLE EMP2 PURGE;
+DROP TABLE dept2 PURGE;
+--creates tables and adds constraints
+CREATE TABLE dept2
+       (id NUMBER(7),
+        name VARCHAR2(25));
+INSERT INTO dept2
+      SELECT  department_id, department_name
+      FROM    departments;
+CREATE TABLE  emp2
+  (id           NUMBER(7),
+   last_name     VARCHAR2(25),
+   first_name    VARCHAR2(25),
+   dept_id       NUMBER(7));
+ALTER TABLE emp2
+      MODIFY (last_name   VARCHAR2(50));
+ALTER TABLE    emp2
+      ADD CONSTRAINT my_emp_id_pk PRIMARY KEY (id);
+ALTER TABLE    dept2
+     ADD CONSTRAINT my_dept_id_pk PRIMARY KEY(id);
+ALTER TABLE emp2
+      ADD CONSTRAINT my_emp_dept_id_fk
+      FOREIGN KEY (dept_id) REFERENCES dept2(id);
+--------------------------------------------------------------------------------------------------------
+
+-- 7) Confirme que las tablas DEPT2 y EMP2 estén almacenadas en el diccionario de datos
+SELECT * FROM user_tables WHERE table_name = 'EMP2';
+SELECT * FROM user_tables WHERE table_name = 'DEPT2';
+SELECT table_name FROM user_tables WHERE table_name IN ('DEPT2', 'EMP2');
+
+-- 8) Confirme que se agregaron las restricciones consultando la vista USER_CONSTRAINTS. Observe los tipos y nombres de las restricciones.
+SELECT constraint_name, constraint_type FROM user_constraints WHERE table_name IN ('DEPT2', 'EMP2');
+
+-- 9) Muestra los nombres y tipos de objetos de la vista del diccionario de datos USER_OBJECTS para las tablas EMP2 y DEPT2
+SELECT * FROM user_objects;
+SELECT object_name, object_type FROM user_objects WHERE object_name IN ('DEPT2', 'EMP2');
+SELECT object_name, object_type FROM user_objects WHERE object_name = 'DEPT2' OR object_name = 'EMP2';
+
+
+-- ESQUEMAS/USUARIOS
+-- COMO SYSDBA
+SELECT * FROM dba_users;
+
+-- SECUENCIAS -- SINONIMOS -- INDICES
+
+-- SECUENCIAS
+-- YA LO HEMOS DADO MAS ARRIBA, LINEA 980
+
+-- SINONIMOS 
+CREATE SYNONYM DEPTA FOR DEPT;
+SELECT * FROM DEPTA;
+
+SELECT * FROM user_synonyms; -- LOS SINONIMOS SE PUEDEN USAR TAMBIEN PARA VISTAS, ETC.
+SELECT * FROM all_synonyms;
+SELECT * FROM all_synonyms WHERE synonym_name LIKE '%DUAL';
+
+DROP SYNONYM DEPTA;
+
+-- INDICES
+SELECT * FROM user_indexes;
+SELECT * FROM user_ind_columns;
+
+-- ROWID
+/* 
+TABLESPACE
+DATAFILES
+SEGMENTS
+EXTENTS
+BLOCK
+*/
+SELECT ROWID, employee_id, firsT_name FROM EMPLOYEES;
+-- ROWID NO EXISTE EN LA TABLA. SE GENERA EN TIEMPO DE CONSULTA
+--ROWID: PRIMEROS 15 CARACTERES --> DATA FILE Y NUMERO DE BLOQUES
+
+
 
