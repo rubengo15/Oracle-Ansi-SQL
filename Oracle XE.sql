@@ -1285,4 +1285,187 @@ SELECT ROWID, employee_id, firsT_name FROM EMPLOYEES;
 --ROWID: PRIMEROS 15 CARACTERES --> DATA FILE Y NUMERO DE BLOQUES
 
 
+------------------------------------SQL ORACLE-----------------------------------------------------
+----- FUNCIONES EN ORACLE
+
+SELECT * FROM emp WHERE LOWER (oficio) = 'analista';
+-- ESTAMOS PONIENDO VALORES ESTATICOS: 'analista'
+-- TAMBIEN PODRIAMOS INCLUIR VALORES DINAMICOS, POR LO QUE TENDRIAMOS QUE CONVERTIR LAS DOS COMPARACIONES
+SELECT * FROM emp WHERE UPPER (oficio) = UPPER ('&dato');
+
+SELECT * FROM emp WHERE UPPER (oficio) = 'ANALISTA';
+
+SELECT * FROM emp WHERE INITCAP (oficio) = 'Analista';
+
+-- EN ORACLE TENEMOS LA POSIBILIDAD DE CONCATENAS TEXTOS EN UNA SOLA COLUMNA (UN CAMPO CALCULADO)
+-- SE UTILIZA EL SIMBOLO || PARA CONCATENAR/UNIR TEXTOS
+-- QUEREMOS MOSTRAR EN UNA SOLA COLUMNA EL APELLIDO Y EL OFICIO DE LOS EMPLEADOS
+SELECT apellido || oficio FROM emp;
+SELECT apellido || oficio AS descripcion FROM emp;
+SELECT apellido || ' ' || oficio AS descripcion FROM emp;
+-- LA FUNCION INICAP MUESTRA CADA ALABRA DE UNA FRASE CON LA PRIMERA LETRA EN MAYUSCULAS
+SELECT INITCAP (oficio) AS initc FROM emp;
+SELECT INITCAP (apellido || ' ' || oficio) AS descripcion FROM emp;
+
+-- CONCATENAR
+SELECT CONCAT ('Nuestro empleado es ',apellido) AS concatenado FROM emp;
+
+-- SUBSTR
+SELECT SUBSTR ('florero',1,3) AS dato FROM dual;
+SELECT SUBSTR (oficio,1,3) AS dato FROM emp;
+-- ME GUSTA ROMPER LAS COSAS
+SELECT SUBSTR ('florero',2,40) AS dato FROM dual;
+-- MOSTRAR LOS EMPLEADOS CUYO APELLIDO EMPIEZA POR s
+SELECT * FROM emp WHERE apellido LIKE 's%';
+SELECT SUBSTR (apellido, 1, 1) AS una_letra FROM emp;
+SELECT * FROM emp WHERE SUBSTR (apellido, 1, 1) = 's'; -- FORMA CORRECTA 
+
+-- LENGTH
+SELECT LENGTH ('libro') AS longitud FROM dual;
+-- DEVUELVE LA CANTIDAD DE CARACTERES
+-- MSOTRAR LOS EMPLEADOS CUYO APELLIDO SEA DE 4 LETRAS
+SELECT * FROM emp WHERE apellido LIKE '____';
+SELECT * FROM emp WHERE LENGTH (apellido) = 4; -- FORMA CORRECTA 
+
+-- INSTR
+-- BUSCA UN TEXTO Y DEVUELVE SU POSICION, DIFERENCIA MAYUS Y MINUS
+SELECT INSTR ('BENITO', 'N') AS posicion_letra FROM dual;
+SELECT INSTR ('BENITO', 'I') AS posicion_letra FROM dual;
+SELECT INSTR ('BENITO', 'P') AS posicion_letra FROM dual;
+SELECT INSTR ('ORACLE MOLA', 'L') AS posicion_letra FROM dual;
+-- SI DESEAMOS VALIDAR UN EMAIL
+SELECT * FROM dual WHERE INSTR ('m@ail', '@') >0;
+
+--LPAD y RPAD
+SELECT LPAD (dept_no, 5, '$') FROM emp;
+SELECT RPAD (dept_no, 5, '$') FROM emp;
+
+------------------------------ FUNCIONES NUMERICAS ------------------------------------------
+-- ROUND
+SELECT ROUND (45.923) AS redondeo FROM dual;
+SELECT ROUND (45.423) AS redondeo FROM dual;
+SELECT ROUND (45.5) AS redondeo FROM dual;
+SELECT ROUND (45.923,1) AS redondeo FROM dual;
+
+-- TRUNC
+SELECT TRUNC (45.923) AS trunca FROM dual;
+SELECT TRUNC (45.423) AS trunca FROM dual;
+SELECT TRUNC (45.5) AS trunca FROM dual;
+SELECT TRUNC (45.923,1) AS trunca FROM dual;
+
+-- MOD
+-- AVERIGUAR SI NUMERO ES PAR
+SELECT MOD (99, 2) AS resto FROM dual;
+-- SI EL RESULTADO ES 0 ES QUE ES PAR, AL SER DIVISIBLE ENTRE 2, SI EL RESULTADO ES DIFERENTE A 0 ENTONCES NO ES PAR
+-- MOSTRAR LOS EMPLEADOS CUYO SALARIO SEA PAR
+select * from emp;
+SELECT MOD (salario, 2) AS resto FROM emp;
+SELECT * FROM emp WHERE MOD (salario, 2) = 0;
+
+
+------------------------- FUNCIONES DE FECHAS -----------------------------------
+-- TENEMOS UNA FUNCION PARA AVERIGUAR LA FECHA DE HOY Y SEGUN DONDE SE ALOJE EL SERVIDOR
+-- SYSDATE
+SELECT SYSDATE AS fecha_actual FROM dual;
+SELECT SYSDATE + 10 AS fecha FROM dual;
+SELECT SYSDATE + 30 AS fecha FROM dual;
+SELECT SYSDATE - 10 AS fecha FROM dual;
+
+-- MONTHS BETWEEN
+-- DEVUELVE LA CANTIDAD DE MESES QUE HAY ENTRE UNA FECHA Y OTRA, LA FECHA UNO TIENE QUE SER MAYOR
+-- MOSTRAR CUANTOS MESES LLEVAN LOS EMPLEADOS DADOS DE ALTA EN LA EMPRESA
+SELECT apellido, MONTHS_BETWEEN (SYSDATE, fecha_alt) AS meses FROM emp;
+
+-- ADD MONTHS
+-- AGREGA X MESES QUE LE DIGAMOS A LA FECHA
+-- AGREGAMOS A LA FECHA ACTUAL 5 MESES
+SELECT ADD_MONTHS (SYSDATE, 5) AS dentro5 FROM dual;
+
+-- NEXT DAY
+-- DEVUELVE LA FECHA DEL DIA SIGUIENTE A LA FECHA
+-- MOSTRAR CUANDO ES EL PROXIMO LUNES
+SELECT NEXT_DAY (SYSDATE, 'LUNES') AS proximo_lunes FROM dual;
+SELECT NEXT_DAY (SYSDATE, 1) AS proximo_lunes FROM dual;
+SELECT NEXT_DAY (SYSDATE, 'lunes') AS proximo_lunes FROM dual;
+
+-- LAST DAY
+-- DEVUELVE EL ULTIMO DIA DE UN MES
+SELECT LAST_DAY (SYSDATE) AS finmes FROM dual;
+
+-- ROUND
+-- REDONDEA
+-- EMPLEADOS REDONDEADOS LA FECHA AL MES
+SELECT apellido, fecha_alt, ROUND (fecha_alt, 'MM') AS roundmes FROM emp;
+SELECT apellido, fecha_alt, ROUND (fecha_alt, 'YY') AS roundmes FROM emp;
+SELECT apellido, fecha_alt, ROUND (fecha_alt, 'DD') AS roundmes FROM emp;
+
+-- TRUNC 
+-- REDONDEA A LA BAJA
+SELECT apellido, fecha_alt, TRUNC (fecha_alt, 'MM') AS truncmes FROM emp;
+SELECT apellido, fecha_alt, TRUNC (fecha_alt, 'YY') AS truncmes FROM emp;
+
+
+---------------------------------- FUNCIONES DE CONVERSION ----------------------------------------------
+
+-- TO CHAR
+-- DAR FORMATO A LOS CARACTERES, NUMERO A FECHAS
+SELECT apellido, fecha_alt, TO_CHAR (fecha_alt, 'dd/mm/yyyy') AS fecha_formato FROM emp;
+SELECT apellido, fecha_alt, TO_CHAR (fecha_alt, 'dd-mm-yyyy') AS fecha_formato FROM emp;
+SELECT apellido, fecha_alt, TO_CHAR (fecha_alt, 'mm/dd/yyyy') AS fecha_formato FROM emp;
+SELECT apellido, fecha_alt, TO_CHAR (fecha_alt, 'ddd') AS dia_del_año FROM emp;
+
+SELECT TO_CHAR (SYSDATE, 'MONTH') AS nombremes FROM dual;
+SELECT TO_CHAR (SYSDATE, 'DAY MONTH YEAR') AS nombremes FROM dual;
+SELECT TO_CHAR (SYSDATE, 'RM') AS nombremes FROM dual;
+
+-- FORMATO A NUMEROS
+SELECT TO_CHAR (7458, '0000L') AS zero FROM dual;
+SELECT TO_CHAR (7458, '0000$') AS zero FROM dual;
+
+-- OBENER LA HORA DEL SISTEMA
+SELECT TO_CHAR (SYSDATE, 'HH24:MI:SS') AS hora FROM dual;
+
+-- SI DESEAMOS INCLUIR TEXTO ENTRE TO_CHAR Y LOS FORMATOS SE REALIZA CON COMILLAS DOBLES DENTRO DE LAS SIMPLES
+SELECT TO_CHAR (SYSDATE, '"Hoy es" DD "de" month') AS formato FROM dual;
+-- PONERLO EN FRANCES
+SELECT TO_CHAR (SYSDATE, '"Hoy es" DD "de" month "de" YEAR', 'NLS_DATE_LANGUAGE = FRENCH') AS formato FROM dual;
+
+
+------------------------------------ FUNCIONES DE CONVERSION -------------------------------------------
+-- TO_DATE
+SELECT '08/04/2025' AS fecha FROM dual;
+SELECT TO_DATE ('08/04/2025') AS fecha FROM dual; -- CORRECTO
+SELECT TO_DATE ('08/04/2025') +2 AS fecha FROM dual;
+-- TO_NUMBER
+SELECT '12' + 2 AS resultado FROM dual;
+SELECT TO_NUMBER ('12') + 2 AS resultado FROM dual;
+
+
+------------------------------------- FUNCIONES GENERALES --------------------------------------------
+-- NVL
+-- SIRVE PARA EVITAR LOS NULOS Y SUSTITUIRLOS, SI ENCUENTRA UN NULO LO SUSTITUYE, SI NO, MUESTRA EL VALOR
+SELECT * FROM EMP;
+-- MOSTRAR APELLIDO, SALARIO Y COMISION DE TODOS LOS EMPLEADOS
+SELECT apellido, salario, comision FROM emp;
+-- PODEMOS INDICAR QUE EN LUGAR DE PONER NULL, ESCRIBA OTRO VALOR, EL VALOR DEBE SER CORRESPONDIENTE AL TIPO DE DATO DE LA COLUMNA
+SELECT apellido, salario, NVL (comision, -1) AS comision FROM emp;
+-- MOSTRAR APELLIDO, SALARIO, COMISION, SALARIO + COMISION DE TODOS LOS EMPLEADOS
+SELECT apellido, salario, comision, salario + NVL (comision, 0) AS "salario mensual" FROM emp;
+
+-- DECODE
+-- MOSTRAR EL TURNO EN PALABRA ('MAÑANA', 'TARDE' O 'NOCHE') DE LA PLANTILLA
+SELECT apellido, turno FROM plantilla;
+SELECT apellido, turno, DECODE (turno, 'M', 'mañana', 'T', 'tarde', 'N', 'noche') AS turno FROM plantilla;
+-- EL DECODE FUNCIONA A PARES, SI ENCUENTRA UN IMPAR ES EL ELSE
+SELECT apellido, turno, DECODE (turno, 'M', 'mañana', 'T', 'tarde','noche') AS turno FROM plantilla;
+-- SI DEJAMOS UNO SIN PONER SALE NULL, SI LO PONEMOS IMPAR EL NULL COGE EL VALOR DEL IMPAR
+
+------------------------------------- FUNCIONES ANIDADAS -------------------------------------------
+-- QUIERO SABER LA FECHA DEL PROXIMO MIERCOLES QUE JUEGA EL MADRID
+SELECT NEXT_DAY (SYSDATE, 'miércoles') AS champions FROM dual;
+-- QUIERO VER LA FECHA COMPLETA, QUIERO VER: El miercoles 11 de abril juega el Madrid
+SELECT to_char (NEXT_DAY (SYSDATE + 2, 'miércoles'),'"El dia" day DD "de" month"de" YYYY "juega el madrid"') AS champions FROM dual;
+
+
+
 
